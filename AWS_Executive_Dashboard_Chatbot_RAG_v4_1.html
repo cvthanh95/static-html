@@ -1,0 +1,87 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AWS Executive Dashboard v4.1</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body{margin:0;font-family:Segoe UI,Arial;background:#f4f7fb}
+header{background:#232F3E;color:#fff;padding:18px 24px}
+.container{max-width:1400px;margin:auto;padding:20px}
+.cards{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.kpi{font-size:28px;font-weight:bold;color:#ff9900}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid #ddd;padding:8px;text-align:center}
+th{background:#232F3E;color:#fff}
+.note{background:#eef7ff;border-left:5px solid #2b7de9;padding:12px;margin-top:10px}
+.notes{background:#fff8e6;border-left:5px solid #ff9900;padding:14px;margin-top:20px}
+pre{background:#0f172a;color:#9feaf9;padding:12px;border-radius:8px}
+</style>
+</head>
+<body>
+<header><h2>AWS Executive Dashboard - AI Chatbot RAG Cost Estimation</h2></header>
+<div class="container">
+<div class="cards">
+<div class="card"><div>Users</div><div class="kpi">1,000</div></div>
+<div class="card"><div>Queries/Day</div><div class="kpi">1,000</div></div>
+<div class="card"><div>Input Tokens</div><div class="kpi">33.6M</div></div>
+<div class="card"><div>Output Tokens</div><div class="kpi">15M</div></div>
+<div class="card"><div>Claude Cost</div><div class="kpi">$326</div></div>
+<div class="card"><div>Estimated Total</div><div class="kpi">$450-500</div></div>
+</div>
+
+<div class="grid">
+<div class="card">
+<h3>Claude Sonnet 4.6 Pricing</h3>
+<table><tr><th>Item</th><th>Price</th></tr>
+<tr><td>Input</td><td>3 USD / 1M Tokens</td></tr>
+<tr><td>Output</td><td>15 USD / 1M Tokens</td></tr></table>
+<pre>Input Cost  = Input Tokens / 1,000,000 × 3 USD
+Output Cost = Output Tokens / 1,000,000 × 15 USD
+Monthly AI Cost = Input Cost + Output Cost</pre>
+<div class="note"><b>Pay-as-you-go:</b> Không có giới hạn 1M token. Amazon Bedrock tính phí theo đúng số token sử dụng thực tế.</div>
+</div>
+
+<div class="card">
+<h3>Assumption</h3>
+<table>
+<tr><th>Parameter</th><th>Value</th></tr>
+<tr><td>Users</td><td>1,000</td></tr>
+<tr><td>Queries/User/Day</td><td>1</td></tr>
+<tr><td>Total Queries/Month</td><td>30,000</td></tr>
+<tr><td>Average Input</td><td>1,120 tokens</td></tr>
+<tr><td>Average Output</td><td>500 tokens</td></tr>
+</table>
+<ul>
+<li>Claude Cost ≈ <b>326 USD</b></li>
+<li>Infrastructure ≈ <b>120–170 USD</b></li>
+<li><b>Total ≈ 450–500 USD/month</b></li>
+</ul>
+</div>
+</div>
+
+<div class="grid">
+<div class="card"><h3>Monthly Cost Comparison</h3><canvas id="bar"></canvas></div>
+<div class="card"><h3>Cost Breakdown</h3><canvas id="pie"></canvas></div>
+</div>
+
+<div class="notes">
+<h3>Executive Notes</h3>
+<ul>
+<li><b>Claude Sonnet 4.6</b> là model mặc định được Anthropic định vị cho phần lớn workload doanh nghiệp, cân bằng tốt giữa <b>chất lượng, tốc độ và chi phí</b>. Đây là lựa chọn phổ biến cho Chatbot AI RAG, AI Assistant và Knowledge Management.</li>
+<li><b>Amazon Quick Suite</b> cấp license theo <b>từng người dùng (Named User)</b>. Chi phí không phụ thuộc vào số lượng câu hỏi AI. Tại thời điểm hiện tại, AWS <b>chưa công bố giới hạn chính thức</b> về số phiên đăng nhập đồng thời (concurrent login/session) cho cùng một tài khoản trong tài liệu công khai.</li>
+<li>Kiến trúc Chatbot AI RAG có thể mở rộng bằng cách thay đổi model (Claude, Amazon Nova, Llama...), điều chỉnh kích thước context hoặc tối ưu prompt mà <b>không cần thay đổi kiến trúc tổng thể</b>.</li>
+</ul>
+</div>
+
+</div>
+<script>
+new Chart(bar,{type:'bar',data:{labels:['1 Question/day','5 Questions/day','10 Questions/day'],datasets:[{label:'Chatbot AI RAG',data:[500,1850,3600]},{label:'Quick Suite',data:[20000,20000,20000]}]},options:{plugins:{legend:{position:'bottom'}}}});
+new Chart(pie,{type:'doughnut',data:{labels:['Claude','OpenSearch','Backend','Knowledge Base','Others'],datasets:[{data:[70,12,6,5,7]}]},options:{plugins:{legend:{position:'bottom'}}}});
+</script>
+</body>
+</html>
