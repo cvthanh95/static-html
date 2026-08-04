@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chatbot AI RAG — Phân Tích Chi Phí AWS | Executive Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+:root{
+  --navy-900:#0E141C;
+  --navy-800:#161F2B;
+  --navy-700:#232F3E;
+  --orange:#FF9900;
+  --orange-dim:#B36B00;
+  --blue:#2B7DE9;
+  --green:#1C9A6C;
+  --red:#D64545;
+  --bg:#F3F6FB;
+  --card:#FFFFFF;
+  --line:#E3E9F1;
+  --text-900:#101720;
+  --text-600:#57616D;
+  --text-400:#8B96A3;
+  --mono:'IBM Plex Mono',monospace;
+  --display:'Space Grotesk',sans-serif;
+  --body:'Inter',sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:var(--body);background:var(--bg);color:var(--text-900);line-height:1.5}
+h1,h2,h3{font-family:var(--display);margin:0 0 8px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--orange);font-weight:600}
+
+/* ---------- Top bar / nav ---------- */
+.topbar{position:sticky;top:0;z-index:50;background:var(--navy-900);border-bottom:1px solid #000;}
+.topbar-inner{max-width:1280px;margin:auto;display:flex;align-items:center;gap:28px;padding:0 24px;height:56px;overflow-x:auto}
+.brand{display:flex;align-items:center;gap:10px;color:#fff;font-family:var(--display);font-weight:700;font-size:15px;white-space:nowrap}
+.brand .dot{width:8px;height:8px;border-radius:50%;background:var(--orange)}
+.navlinks{display:flex;gap:22px;white-space:nowrap}
+.navlinks a{color:#AEB9C7;text-decoration:none;font-size:13px;font-weight:500;padding:6px 0;border-bottom:2px solid transparent;transition:.15s}
+.navlinks a:hover{color:#fff;border-color:var(--orange)}
+
+/* ---------- Hero ---------- */
+header.hero{background:radial-gradient(1200px 500px at 15% -10%, #1C2836 0%, var(--navy-900) 55%);color:#fff;padding:56px 24px 40px;border-bottom:4px solid var(--orange)}
+.hero-inner{max-width:1280px;margin:auto}
+.hero h1{font-size:34px;font-weight:700;max-width:820px}
+.hero p.lead{color:#B9C3D0;max-width:680px;font-size:15px;margin-top:10px}
+
+/* signature: token pipeline */
+.pipeline{margin-top:34px;display:flex;align-items:stretch;gap:0;overflow-x:auto}
+.p-node{background:var(--navy-800);border:1px solid #2A374A;border-radius:10px;padding:14px 18px;min-width:150px;flex-shrink:0}
+.p-node .label{font-family:var(--mono);font-size:11px;color:var(--text-400);text-transform:uppercase;letter-spacing:.08em}
+.p-node .val{font-family:var(--mono);font-size:20px;font-weight:600;color:#fff;margin-top:4px}
+.p-node .sub{font-size:11px;color:#8B96A3;margin-top:2px}
+.p-arrow{flex-shrink:0;width:44px;display:flex;align-items:center;justify-content:center;color:var(--orange);font-family:var(--mono);font-size:14px}
+.p-node.hot{border-color:var(--orange);background:linear-gradient(180deg,#241A0C,#1B1409)}
+.p-node.hot .val{color:var(--orange)}
+
+.container{max-width:1280px;margin:auto;padding:44px 24px}
+section{margin-bottom:56px;scroll-margin-top:72px}
+.section-head{display:flex;align-items:baseline;gap:12px;margin-bottom:18px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.section-head h2{font-size:21px}
+.section-num{font-family:var(--mono);color:var(--text-400);font-size:13px}
+
+/* ---------- Cards / grids ---------- */
+.cards{display:grid;grid-template-columns:repeat(6,1fr);gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px}
+.card .k-label{font-size:12px;color:var(--text-600);font-weight:500}
+.kpi{font-family:var(--mono);font-size:26px;font-weight:600;color:var(--navy-700);margin-top:6px}
+.kpi.orange{color:var(--orange-dim)}
+.kpi.total{color:var(--green)}
+
+.grid2{display:grid;grid-template-columns:1.1fr .9fr;gap:20px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:22px}
+.panel h3{font-size:15px;color:var(--navy-700)}
+
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:10px}
+th,td{border:1px solid var(--line);padding:9px 10px;text-align:left}
+th{background:var(--navy-700);color:#fff;font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.03em}
+td.num,th.num{text-align:right;font-family:var(--mono)}
+tr:nth-child(even) td{background:#FAFBFD}
+
+pre.formula{background:var(--navy-900);color:#8FE3D8;padding:16px 18px;border-radius:10px;font-family:var(--mono);font-size:13px;line-height:1.7;overflow-x:auto;margin-top:12px;border:1px solid #2A374A}
+pre.formula .k{color:var(--orange)}
+
+.note{background:#EEF6FF;border-left:4px solid var(--blue);padding:14px 16px;border-radius:0 8px 8px 0;font-size:13.5px;color:#26364D;margin-top:14px}
+.note b{color:var(--navy-700)}
+
+.notes-box{background:#FFF8E9;border-left:4px solid var(--orange);border-radius:0 10px 10px 0;padding:20px 22px}
+.notes-box ul{margin:0;padding-left:20px}
+.notes-box li{margin-bottom:10px;font-size:14px}
+
+.chart-wrap{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px}
+.chart-wrap canvas{max-height:280px}
+
+.badge{display:inline-block;font-family:var(--mono);font-size:11px;padding:2px 8px;border-radius:20px;font-weight:600}
+.badge.win{background:#E4F6EE;color:var(--green)}
+.badge.lose{background:#FCEAEA;color:var(--red)}
+
+.conclusion{background:linear-gradient(135deg,var(--navy-700),var(--navy-900));color:#fff;border-radius:14px;padding:34px 32px}
+.conclusion h2{color:#fff}
+.conclusion .eyebrow{color:var(--orange)}
+.conclusion ol{padding-left:20px;color:#D5DCE5;font-size:14.5px}
+.conclusion ol li{margin-bottom:10px}
+.conclusion ol li b{color:#fff}
+
+footer{text-align:center;padding:26px;font-size:12px;color:var(--text-400);border-top:1px solid var(--line)}
+
+@media(max-width:980px){
+  .cards{grid-template-columns:repeat(3,1fr)}
+  .grid2{grid-template-columns:1fr}
+}
+@media(max-width:600px){
+  .cards{grid-template-columns:repeat(2,1fr)}
+  .hero h1{font-size:26px}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand"><span class="dot"></span>AWS COST ANALYSIS</div>
+    <div class="navlinks">
+      <a href="#summary">Tổng Quan</a>
+      <a href="#pricing">Bảng Giá</a>
+      <a href="#formula">Công Thức</a>
+      <a href="#payg">Pay-as-you-go</a>
+      <a href="#assumption">Giả Định</a>
+      <a href="#comparison">So Sánh Chi Phí</a>
+      <a href="#breakdown">Cơ Cấu Chi Phí</a>
+      <a href="#exec-notes">Ghi Chú</a>
+      <a href="#conclusion">Kết Luận</a>
+    </div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">Executive Dashboard · Chatbot AI RAG</div>
+    <h1>Ước Tính Chi Phí Vận Hành Chatbot AI RAG Trên AWS</h1>
+    <p class="lead">Phân tích chi phí hàng tháng cho kiến trúc Chatbot AI RAG sử dụng Claude Sonnet 5 qua Amazon Bedrock, dựa trên quy mô 1.000 người dùng nội bộ, so sánh với phương án Amazon Quick Suite.</p>
+
+    <div class="pipeline">
+      <div class="p-node"><div class="label">Người dùng</div><div class="val">1.000</div><div class="sub">tài khoản nội bộ</div></div>
+      <div class="p-arrow">→</div>
+      <div class="p-node"><div class="label">Truy vấn / tháng</div><div class="val">30.000</div><div class="sub">1 câu hỏi / người / ngày</div></div>
+      <div class="p-arrow">→</div>
+      <div class="p-node"><div class="label">Input tokens</div><div class="val">33.6M</div><div class="sub">≈1.120 tokens / truy vấn</div></div>
+      <div class="p-arrow">→</div>
+      <div class="p-node"><div class="label">Output tokens</div><div class="val">15M</div><div class="sub">≈500 tokens / truy vấn</div></div>
+      <div class="p-arrow">→</div>
+      <div class="p-node hot"><div class="label">Chi phí ước tính</div><div class="val">$450–500</div><div class="sub">tổng / tháng</div></div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- 1. EXECUTIVE SUMMARY -->
+  <section id="summary">
+    <div class="section-head"><span class="section-num">01</span><h2>Executive Summary</h2></div>
+    <div class="cards">
+      <div class="card"><div class="k-label">Users</div><div class="kpi">1,000</div></div>
+      <div class="card"><div class="k-label">Queries / Day</div><div class="kpi">1,000</div></div>
+      <div class="card"><div class="k-label">Input Tokens</div><div class="kpi">33.6M</div></div>
+      <div class="card"><div class="k-label">Output Tokens</div><div class="kpi">15M</div></div>
+      <div class="card"><div class="k-label">Claude Cost</div><div class="kpi orange">$326</div></div>
+      <div class="card"><div class="k-label">Estimated Total</div><div class="kpi total">$450–500</div></div>
+    </div>
+    <div class="note">
+      <b>Tóm tắt:</b> Với quy mô 1.000 người dùng, mỗi người gửi trung bình 1 câu hỏi/ngày, chi phí AI (Claude Sonnet 5 qua Amazon Bedrock) chiếm khoảng <b>70%</b> tổng chi phí vận hành. Phần còn lại đến từ hạ tầng tìm kiếm (OpenSearch), backend xử lý và Knowledge Base. Tổng chi phí vận hành hàng tháng dao động <b>450–500 USD</b>, thấp hơn đáng kể so với phương án license theo đầu người của Amazon Quick Suite khi số câu hỏi/ngày tăng lên.
+    </div>
+  </section>
+
+  <!-- 2. PRICING -->
+  <section id="pricing">
+    <div class="section-head"><span class="section-num">02</span><h2>Claude Sonnet 5 Pricing</h2></div>
+    <div class="grid2">
+      <div class="panel">
+        <h3>Đơn giá theo token (Amazon Bedrock)</h3>
+        <table>
+          <tr><th>Hạng mục</th><th class="num">Giá ưu đãi<br><span style="font-weight:400">(đến 31/08/2026)</span></th><th class="num">Giá tiêu chuẩn<br><span style="font-weight:400">(từ 01/09/2026)</span></th></tr>
+          <tr><td>Input</td><td class="num">$2 / 1M tokens</td><td class="num">$3 / 1M tokens</td></tr>
+          <tr><td>Output</td><td class="num">$10 / 1M tokens</td><td class="num">$15 / 1M tokens</td></tr>
+        </table>
+        <div class="note">
+          <b>Lưu ý:</b> Claude Sonnet 5 hiện đang áp dụng <b>giá ưu đãi ra mắt</b> đến hết 31/08/2026. Sau thời điểm này, giá sẽ chuyển sang mức tiêu chuẩn $3 / $15 trên mỗi 1 triệu token input/output. Toàn bộ ước tính trong dashboard này dùng <b>giá tiêu chuẩn</b> để phản ánh chi phí dài hạn một cách thận trọng.
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Chi phí Claude theo 2 kịch bản giá</h3>
+        <table>
+          <tr><th>Kịch bản</th><th class="num">Input Cost</th><th class="num">Output Cost</th><th class="num">Tổng</th></tr>
+          <tr><td>Giá ưu đãi ($2/$10)</td><td class="num">$67.2</td><td class="num">$150.0</td><td class="num"><b>$217.2</b></td></tr>
+          <tr><td>Giá tiêu chuẩn ($3/$15)</td><td class="num">$100.8</td><td class="num">$225.0</td><td class="num"><b>$325.8</b></td></tr>
+        </table>
+        <div class="note">Chênh lệch giữa 2 kịch bản ≈ <b>$109/tháng</b> — nên chốt ngân sách theo giá tiêu chuẩn để tránh vượt dự toán sau 31/08/2026.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. FORMULA -->
+  <section id="formula">
+    <div class="section-head"><span class="section-num">03</span><h2>Công Thức Tính Token &amp; Chi Phí</h2></div>
+    <div class="panel">
+      <h3>Cách tính chi phí AI hàng tháng</h3>
+      <pre class="formula"><span class="k">Input Cost</span>       = (Input Tokens  ÷ 1,000,000) × Đơn giá Input
+<span class="k">Output Cost</span>      = (Output Tokens ÷ 1,000,000) × Đơn giá Output
+<span class="k">Monthly AI Cost</span>  = Input Cost + Output Cost
+
+// Áp dụng với số liệu thực tế (giá tiêu chuẩn $3 / $15)
+Input Cost      = (33,600,000 ÷ 1,000,000) × $3   = <span class="k">$100.80</span>
+Output Cost     = (15,000,000 ÷ 1,000,000) × $15  = <span class="k">$225.00</span>
+Monthly AI Cost = $100.80 + $225.00                = <span class="k">$325.80</span></pre>
+      <div class="note"><b>Cách quy đổi token:</b> Trung bình 1 câu hỏi tiếng Việt ≈ 750–900 ký tự tương ứng ≈ 1,120 input tokens (bao gồm system prompt, ngữ cảnh RAG và câu hỏi người dùng); câu trả lời trung bình ≈ 500 output tokens.</div>
+    </div>
+  </section>
+
+  <!-- 4. PAY AS YOU GO -->
+  <section id="payg">
+    <div class="section-head"><span class="section-num">04</span><h2>Mô Hình Pay-as-you-go</h2></div>
+    <div class="grid2">
+      <div class="panel">
+        <h3>Amazon Bedrock tính phí theo mức sử dụng thực tế</h3>
+        <p style="font-size:14px;color:var(--text-600)">Không giống mô hình license cố định, Amazon Bedrock áp dụng <b>pay-as-you-go</b>: chi phí tăng/giảm tuyến tính theo số token thực tế được xử lý, không có gói thuê bao cố định và không giới hạn "1M token" như một số nền tảng khác.</p>
+        <ul style="font-size:14px;color:var(--text-600);padding-left:20px">
+          <li>Không phí khởi tạo, không cam kết tối thiểu.</li>
+          <li>Thanh toán theo giờ/ngày dựa trên token tiêu thụ thực tế.</li>
+          <li>Chi phí có thể mở rộng tuyến tính khi số lượng người dùng hoặc tần suất câu hỏi tăng.</li>
+          <li>Dễ dự đoán ngân sách vì công thức tính đơn giản (input × đơn giá + output × đơn giá).</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h3>So sánh mô hình định giá</h3>
+        <table>
+          <tr><th>Mô hình</th><th>Chatbot AI RAG (Bedrock)</th><th>Amazon Quick Suite</th></tr>
+          <tr><td>Cơ chế tính phí</td><td>Theo token thực tế</td><td>Theo license/người dùng (Named User)</td></tr>
+          <tr><td>Phụ thuộc tần suất hỏi</td><td>Có — tăng theo số câu hỏi</td><td>Không — phí cố định dù hỏi nhiều hay ít</td></tr>
+          <tr><td>Phù hợp khi tần suất thấp</td><td class="num"><span class="badge win">Tối ưu</span></td><td class="num"><span class="badge lose">Kém tối ưu</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. ASSUMPTIONS -->
+  <section id="assumption">
+    <div class="section-head"><span class="section-num">05</span><h2>Assumption — Cơ Sở Tính Toán</h2></div>
+    <div class="panel">
+      <table>
+        <tr><th>Tham số</th><th class="num">Giá trị</th><th>Ghi chú</th></tr>
+        <tr><td>Users</td><td class="num">1,000</td><td>Người dùng nội bộ đăng nhập chatbot</td></tr>
+        <tr><td>Queries / User / Day</td><td class="num">1</td><td>Kịch bản cơ sở (baseline)</td></tr>
+        <tr><td>Total Queries / Month</td><td class="num">30,000</td><td>1,000 users × 1 query × ~30 ngày</td></tr>
+        <tr><td>Average Input</td><td class="num">1,120 tokens</td><td>Gồm prompt hệ thống + ngữ cảnh RAG + câu hỏi</td></tr>
+        <tr><td>Average Output</td><td class="num">500 tokens</td><td>Câu trả lời trung bình</td></tr>
+      </table>
+      <div class="note">
+        <b>Kết quả tính toán:</b><br>
+        Claude Cost (giá tiêu chuẩn) ≈ <b>$326 USD</b> · Infrastructure (OpenSearch, compute, storage) ≈ <b>$120–170 USD</b> · <b>Tổng ≈ $450–500 USD/tháng</b>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. COST COMPARISON -->
+  <section id="comparison">
+    <div class="section-head"><span class="section-num">06</span><h2>So Sánh Chi Phí: Chatbot AI RAG vs Amazon Quick Suite</h2></div>
+    <div class="grid2">
+      <div class="chart-wrap">
+        <h3 style="padding:0 4px">Monthly Cost Comparison (USD)</h3>
+        <canvas id="bar"></canvas>
+      </div>
+      <div class="panel">
+        <h3>Chi tiết theo tần suất sử dụng</h3>
+        <table>
+          <tr><th>Tần suất</th><th class="num">Chatbot AI RAG</th><th class="num">Quick Suite</th><th>Kết luận</th></tr>
+          <tr><td>1 câu hỏi/ngày</td><td class="num">$500</td><td class="num">$20,000</td><td><span class="badge win">RAG rẻ hơn</span></td></tr>
+          <tr><td>5 câu hỏi/ngày</td><td class="num">$1,850</td><td class="num">$20,000</td><td><span class="badge win">RAG rẻ hơn</span></td></tr>
+          <tr><td>10 câu hỏi/ngày</td><td class="num">$3,600</td><td class="num">$20,000</td><td><span class="badge win">RAG rẻ hơn</span></td></tr>
+        </table>
+        <div class="note">Quick Suite tính phí theo <b>Named User license</b> nên chi phí không đổi (~$20,000/tháng cho 1,000 users) dù tần suất hỏi tăng. Ngược lại, Chatbot AI RAG tính theo token nên chi phí tăng dần nhưng vẫn thấp hơn nhiều lần ở mọi mức tần suất trong kịch bản này.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7. COST BREAKDOWN -->
+  <section id="breakdown">
+    <div class="section-head"><span class="section-num">07</span><h2>Cost Breakdown</h2></div>
+    <div class="grid2">
+      <div class="chart-wrap">
+        <h3 style="padding:0 4px">Cơ cấu chi phí theo thành phần</h3>
+        <canvas id="pie"></canvas>
+      </div>
+      <div class="panel">
+        <h3>Diễn giải</h3>
+        <table>
+          <tr><th>Thành phần</th><th class="num">Tỷ trọng</th></tr>
+          <tr><td>Claude (Bedrock)</td><td class="num">70%</td></tr>
+          <tr><td>OpenSearch</td><td class="num">12%</td></tr>
+          <tr><td>Backend</td><td class="num">6%</td></tr>
+          <tr><td>Knowledge Base</td><td class="num">5%</td></tr>
+          <tr><td>Others</td><td class="num">7%</td></tr>
+        </table>
+        <div class="note">Chi phí model AI (Claude) chiếm phần lớn tổng chi phí, phù hợp với đặc thù kiến trúc RAG — nơi phần lớn khối lượng tính toán nằm ở bước sinh câu trả lời (generation), không phải ở hạ tầng tìm kiếm hay lưu trữ.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. EXECUTIVE NOTES -->
+  <section id="exec-notes">
+    <div class="section-head"><span class="section-num">08</span><h2>Executive Notes</h2></div>
+    <div class="notes-box">
+      <ul>
+        <li><b>Claude Sonnet 5</b> là model hiện tại được Anthropic định vị cho phần lớn workload doanh nghiệp, cân bằng giữa <b>chất lượng, tốc độ và chi phí</b>. Đây là lựa chọn phổ biến cho Chatbot AI RAG, AI Assistant và Knowledge Management. Model đang trong giai đoạn giá ưu đãi ra mắt (đến 31/08/2026), sau đó chuyển sang giá tiêu chuẩn.</li>
+        <li><b>Amazon Quick Suite</b> cấp license theo <b>từng người dùng (Named User)</b>. Chi phí không phụ thuộc vào số lượng câu hỏi AI. Tại thời điểm hiện tại, AWS <b>chưa công bố giới hạn chính thức</b> về số phiên đăng nhập đồng thời (concurrent login/session) cho cùng một tài khoản trong tài liệu công khai.</li>
+        <li>Kiến trúc Chatbot AI RAG có thể mở rộng bằng cách thay đổi model (Claude, Amazon Nova, Llama...), điều chỉnh kích thước context hoặc tối ưu prompt mà <b>không cần thay đổi kiến trúc tổng thể</b>.</li>
+        <li>Nên theo dõi sát mốc <b>31/08/2026</b> khi giá Claude Sonnet 5 chuyển từ ưu đãi sang tiêu chuẩn, vì chi phí AI có thể tăng khoảng <b>50%</b> tại cùng mức sử dụng.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 9. CONCLUSION -->
+  <section id="conclusion">
+    <div class="conclusion">
+      <div class="eyebrow">09 · Kết Luận</div>
+      <h2>Khuyến Nghị Triển Khai</h2>
+      <ol>
+        <li><b>Chatbot AI RAG trên nền Claude Sonnet 5 + Amazon Bedrock</b> là phương án tối ưu chi phí ở quy mô 1,000 người dùng với tần suất 1 câu hỏi/ngày, với tổng chi phí ước tính <b>$450–500/tháng</b> — thấp hơn nhiều lần so với Amazon Quick Suite ở cùng quy mô.</li>
+        <li>Mô hình <b>pay-as-you-go</b> giúp chi phí luôn tỷ lệ thuận với mức sử dụng thực tế, phù hợp với giai đoạn thử nghiệm/mở rộng dần thay vì cam kết license cố định.</li>
+        <li>Cần chốt ngân sách dựa trên <b>giá tiêu chuẩn ($3/$15)</b> áp dụng từ 01/09/2026 để tránh rủi ro vượt dự toán khi giai đoạn ưu đãi kết thúc.</li>
+        <li>Amazon Quick Suite chỉ trở nên cạnh tranh về chi phí khi tần suất câu hỏi trên mỗi người dùng tăng rất cao — cần đánh giá lại nếu nhu cầu sử dụng thực tế vượt xa baseline hiện tại.</li>
+      </ol>
+    </div>
+  </section>
+
+</div>
+
+<footer>AWS Executive Dashboard — Chatbot AI RAG Cost Estimation · Cập nhật 08/2026 · Số liệu mang tính ước tính, cần đối chiếu với AWS Pricing Calculator trước khi phê duyệt ngân sách chính thức.</footer>
+
+<script>
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.color = '#57616D';
+
+new Chart(document.getElementById('bar'), {
+  type: 'bar',
+  data: {
+    labels: ['1 câu hỏi/ngày', '5 câu hỏi/ngày', '10 câu hỏi/ngày'],
+    datasets: [
+      { label: 'Chatbot AI RAG', data: [500, 1850, 3600], backgroundColor: '#FF9900', borderRadius: 4 },
+      { label: 'Amazon Quick Suite', data: [20000, 20000, 20000], backgroundColor: '#232F3E', borderRadius: 4 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position: 'bottom' } },
+    scales: { y: { ticks: { callback: v => '$' + v.toLocaleString() } } }
+  }
+});
+
+new Chart(document.getElementById('pie'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Claude', 'OpenSearch', 'Backend', 'Knowledge Base', 'Others'],
+    datasets: [{
+      data: [70, 12, 6, 5, 7],
+      backgroundColor: ['#FF9900', '#2B7DE9', '#232F3E', '#1C9A6C', '#8B96A3']
+    }]
+  },
+  options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+});
+</script>
+</body>
+</html>
