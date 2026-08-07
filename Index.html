@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IT Security & Governance — Tracker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1B2A4A;
+    --navy-dark:#121D33;
+    --ice:#E8EEF7;
+    --ice-line:#C7D6EA;
+    --text-dark:#1F2A3D;
+    --text-muted:#5B6B84;
+    --green-bg:#DFF4E8; --green-tx:#1E6E4A;
+    --amber-bg:#FDEFD9; --amber-tx:#9A5B0B;
+    --red-bg:#FBE1DF; --red-tx:#A3271F;
+    --page-bg:#F5F7FA;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--page-bg); color:var(--text-dark);
+    font-family:'Inter',sans-serif; line-height:1.5;
+  }
+  header{
+    background:var(--navy); color:#fff; padding:2.4rem 2.5rem 2rem;
+  }
+  header h1{
+    font-family:'Fraunces',serif; font-weight:600; font-size:2.1rem; margin:0 0 .4rem;
+    letter-spacing:-0.01em;
+  }
+  header p{margin:0; color:#AEC1DD; font-size:1rem;}
+  .meta{margin-top:1.1rem; font-size:.85rem; color:#8FA5C4;}
+
+  .wrap{max-width:1180px; margin:0 auto; padding:0 2rem;}
+
+  .stats{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr));
+    gap:14px; margin:-2.4rem 0 2rem;
+  }
+  .stat-card{
+    background:#fff; border-radius:14px; padding:1.1rem 1.3rem;
+    box-shadow:0 1px 3px rgba(20,30,50,0.08), 0 8px 24px rgba(20,30,50,0.06);
+  }
+  .stat-card .num{font-family:'Fraunces',serif; font-size:2.1rem; font-weight:600; line-height:1;}
+  .stat-card .lbl{font-size:.82rem; color:var(--text-muted); margin-top:.4rem;}
+  .stat-card.total .num{color:var(--navy);}
+  .stat-card.done .num{color:var(--green-tx);}
+  .stat-card.progress .num{color:var(--amber-tx);}
+  .stat-card.blocked .num{color:var(--red-tx);}
+
+  .toolbar{
+    display:flex; flex-wrap:wrap; gap:.6rem; align-items:center;
+    margin-bottom:1.4rem; padding:1rem 1.2rem; background:#fff;
+    border-radius:12px; border:1px solid var(--ice-line);
+  }
+  .toolbar input[type=search]{
+    flex:1; min-width:180px; padding:.55rem .8rem; border-radius:8px;
+    border:1px solid var(--ice-line); font-family:inherit; font-size:.9rem; color:var(--text-dark);
+  }
+  .toolbar select{
+    padding:.55rem .7rem; border-radius:8px; border:1px solid var(--ice-line);
+    font-family:inherit; font-size:.85rem; color:var(--text-dark); background:#fff;
+  }
+  .toolbar .count{font-size:.82rem; color:var(--text-muted); margin-left:auto; white-space:nowrap;}
+
+  .group{
+    background:#fff; border-radius:14px; margin-bottom:1.1rem; overflow:hidden;
+    border:1px solid var(--ice-line);
+  }
+  .group-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:.95rem 1.3rem; cursor:pointer; user-select:none;
+  }
+  .group-head:hover{background:#FAFBFD;}
+  .group-title{font-weight:600; font-size:1.02rem; color:var(--navy);}
+  .group-sub{font-size:.8rem; color:var(--text-muted); margin-left:.6rem; font-weight:400;}
+  .chev{transition:transform .18s ease; color:var(--text-muted); font-size:.8rem;}
+  .group.collapsed .chev{transform:rotate(-90deg);}
+  .group.collapsed .items{display:none;}
+
+  table{width:100%; border-collapse:collapse;}
+  thead th{
+    text-align:left; font-size:.72rem; text-transform:uppercase; letter-spacing:.04em;
+    color:var(--text-muted); padding:.5rem 1.3rem; border-top:1px solid var(--ice-line);
+    font-weight:600;
+  }
+  tbody td{
+    padding:.75rem 1.3rem; border-top:1px solid #F0F3F8; font-size:.88rem; vertical-align:top;
+  }
+  tbody tr:hover{background:#FAFBFD;}
+  .content-cell{font-weight:500; color:var(--text-dark); max-width:260px;}
+  .badge{
+    display:inline-block; padding:.25rem .65rem; border-radius:6px;
+    font-size:.78rem; font-weight:600; white-space:nowrap;
+  }
+  .badge.done{background:var(--green-bg); color:var(--green-tx);}
+  .badge.progress{background:var(--amber-bg); color:var(--amber-tx);}
+  .badge.blocked{background:var(--red-bg); color:var(--red-tx);}
+  .owner{font-size:.85rem; color:var(--text-dark); white-space:nowrap;}
+  .risk{color:var(--text-muted); font-size:.83rem; max-width:240px;}
+  .next{font-size:.83rem; max-width:220px;}
+  .empty{padding:2.5rem; text-align:center; color:var(--text-muted); font-size:.9rem;}
+
+  footer{text-align:center; padding:2rem 0 3rem; color:var(--text-muted); font-size:.8rem;}
+
+  .tabs{
+    display:flex; gap:.4rem; margin-top:1.3rem;
+  }
+  .tabs button{
+    font-family:'Inter',sans-serif; font-size:.85rem; font-weight:600; color:#AEC1DD;
+    background:transparent; border:none; padding:.55rem 1.1rem; border-radius:8px 8px 0 0;
+    cursor:pointer; border-bottom:2px solid transparent;
+  }
+  .tabs button.active{ color:#fff; border-bottom:2px solid #fff; }
+  .tabs button:hover{ color:#fff; }
+
+  .page{ display:none; }
+  .page.active{ display:block; }
+  #page-compare.active{ margin-top:-1.6rem; }
+
+  .compare-head{
+    display:flex; align-items:baseline; justify-content:space-between; margin-bottom:1.2rem; flex-wrap:wrap; gap:.4rem;
+  }
+  .compare-head h2{ font-family:'Fraunces',serif; font-weight:600; font-size:1.3rem; color:var(--navy); margin:0; }
+  .compare-head .range{ font-size:.85rem; color:var(--text-muted); }
+
+  .delta-row{
+    display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:1.8rem;
+  }
+  .delta-card{ background:#fff; border-radius:14px; padding:1.1rem 1.3rem; box-shadow:0 1px 3px rgba(20,30,50,0.08), 0 8px 24px rgba(20,30,50,0.06); }
+  .delta-card .lbl{ font-size:.8rem; color:var(--text-muted); margin-bottom:.5rem; }
+  .delta-card .nums{ display:flex; align-items:baseline; gap:.5rem; }
+  .delta-card .old{ font-family:'Fraunces',serif; font-size:1.3rem; color:#B7C2D4; text-decoration:line-through; }
+  .delta-card .arrow{ color:var(--text-muted); font-size:1rem; }
+  .delta-card .new{ font-family:'Fraunces',serif; font-size:1.9rem; font-weight:600; }
+  .delta-card .diff{ font-size:.78rem; font-weight:600; margin-top:.3rem; }
+  .delta-card.total .new{ color:var(--navy); }
+  .delta-card.done .new{ color:var(--green-tx); } .delta-card.done .diff{ color:var(--green-tx); }
+  .delta-card.progress .new{ color:var(--amber-tx); } .delta-card.progress .diff{ color:var(--amber-tx); }
+  .delta-card.blocked .new{ color:var(--red-tx); } .delta-card.blocked .diff{ color:var(--red-tx); }
+
+  .change-section{ margin-bottom:1.6rem; }
+  .change-section h3{
+    font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; color:var(--text-muted);
+    margin:0 0 .7rem; font-weight:600;
+  }
+  .change-list{ background:#fff; border-radius:14px; border:1px solid var(--ice-line); overflow:hidden; }
+  .change-item{
+    display:flex; align-items:center; gap:1rem; padding:.85rem 1.3rem; border-top:1px solid #F0F3F8; flex-wrap:wrap;
+  }
+  .change-item:first-child{ border-top:none; }
+  .change-item .name{ flex:1 1 220px; font-weight:500; font-size:.9rem; color:var(--text-dark); }
+  .change-badges{ display:flex; align-items:center; gap:.5rem; flex:0 0 auto; }
+  .change-badges .arrow{ color:var(--text-muted); font-size:.85rem; }
+  .badge.was{ background:#F0F3F8; color:var(--text-muted); text-decoration:line-through; }
+  .change-note{ flex:1 1 100%; font-size:.8rem; color:var(--text-muted); }
+  .unchanged-list{ font-size:.85rem; color:var(--text-muted); background:#fff; border:1px solid var(--ice-line); border-radius:14px; padding:.9rem 1.3rem; }
+  .unchanged-list b{ color:var(--text-dark); font-weight:500; }
+
+
+  @media (max-width:720px){
+    table, thead, tbody, th, td, tr{display:block;}
+    thead{display:none;}
+    tbody tr{border-top:1px solid var(--ice-line); padding:.8rem 1.3rem;}
+    tbody td{padding:.25rem 0; border:none;}
+    .content-cell{font-size:.95rem;}
+    .risk, .next{max-width:none;}
+    td:before{content:attr(data-label); display:block; font-size:.7rem; text-transform:uppercase; color:var(--text-muted); margin-top:.5rem;}
+    td:first-child:before{display:none;}
+    .delta-row{ grid-template-columns:repeat(2,1fr); }
+    .tabs button{ padding:.5rem .8rem; font-size:.8rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <h1>IT Security &amp; Governance</h1>
+    <p>Theo dõi tiến độ triển khai — SnC × DigiS</p>
+    <div class="meta">Cập nhật: 07/08/2026 · so với 31/07/2026 · 18 hạng mục · 6 nhóm</div>
+    <div class="tabs">
+      <button class="active" data-page="compare">So sánh tuần</button>
+      <button data-page="details">Chi tiết hạng mục</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="page active" id="page-compare">
+    <div class="compare-head">
+      <h2>Chuyển biến so với tuần trước</h2>
+      <span class="range">31/07/2026 → 07/08/2026</span>
+    </div>
+
+    <div class="delta-row">
+      <div class="delta-card total">
+        <div class="lbl">Tổng hạng mục</div>
+        <div class="nums"><span class="new">18</span></div>
+        <div class="diff" style="color:var(--text-muted);">Không đổi</div>
+      </div>
+      <div class="delta-card done">
+        <div class="lbl">Đã hoàn thành / ổn định</div>
+        <div class="nums"><span class="old">7</span><span class="arrow">&#8594;</span><span class="new">11</span></div>
+        <div class="diff">+4</div>
+      </div>
+      <div class="delta-card progress">
+        <div class="lbl">Đang triển khai</div>
+        <div class="nums"><span class="old">9</span><span class="arrow">&#8594;</span><span class="new">6</span></div>
+        <div class="diff">−3</div>
+      </div>
+      <div class="delta-card blocked">
+        <div class="lbl">Vướng mắc / chưa bắt đầu</div>
+        <div class="nums"><span class="old">2</span><span class="arrow">&#8594;</span><span class="new">1</span></div>
+        <div class="diff">−1</div>
+      </div>
+    </div>
+
+    <div class="change-section">
+      <h3>Chuyển biến tích cực (5 hạng mục)</h3>
+      <div class="change-list">
+        <div class="change-item">
+          <span class="name">Kiểm soát phần mềm crack</span>
+          <span class="change-badges"><span class="badge was">Đang triển khai</span><span class="arrow">&#8594;</span><span class="badge done">Theo dõi định kỳ</span></span>
+        </div>
+        <div class="change-item">
+          <span class="name">Thu hồi quyền Admin end user</span>
+          <span class="change-badges"><span class="badge was">Đang triển khai</span><span class="arrow">&#8594;</span><span class="badge done">Theo dõi định kỳ</span></span>
+        </div>
+        <div class="change-item">
+          <span class="name">Kiểm soát S2S, export log S3 &amp; AI analysis</span>
+          <span class="change-badges"><span class="badge was">Review port</span><span class="arrow">&#8594;</span><span class="badge done">Theo dõi định kỳ</span></span>
+        </div>
+        <div class="change-item">
+          <span class="name">Windows License Audit</span>
+          <span class="change-badges"><span class="badge was">Nhận diện theo assets</span><span class="arrow">&#8594;</span><span class="badge done">Theo dõi định kỳ</span></span>
+        </div>
+        <div class="change-item">
+          <span class="name">Giải pháp FortiGate Farm &amp; FAZ tập trung</span>
+          <span class="change-badges"><span class="badge was">Chưa start</span><span class="arrow">&#8594;</span><span class="badge progress">Đã họp vendor lần 1 (06/08)</span></span>
+          <span class="change-note">Đã họp với vendor lần 1 ngày 06/08, không còn ở trạng thái vướng mắc.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="change-section">
+      <h3>Cập nhật khác (8 hạng mục)</h3>
+      <div class="change-list">
+        <div class="change-item">
+          <span class="name">FAZ Bandwidth Monitoring</span>
+          <span class="change-note">Trạng thái đổi từ "Đã giám sát ở BD" → "Theo dõi định kỳ"; đã gỡ rủi ro/cần hỗ trợ liên quan VLAN.</span>
+        </div>
+        <div class="change-item">
+          <span class="name">BYOD &amp; VLAN Guest</span>
+          <span class="change-note">Mốc tiếp theo cập nhật: "31/07" → "Tạm dừng từ 31/07".</span>
+        </div>
+        <div class="change-item">
+          <span class="name">Quản lý Outbound OT</span>
+          <span class="change-note">Mốc tiếp theo cập nhật: "Thảo luận thống nhất Q3" → "Tiếp tục thảo luận đến Q3".</span>
+        </div>
+        <div class="change-item">
+          <span class="name">Đánh giá thay thế Desktop Central</span>
+          <span class="change-note">Mốc tiếp theo cập nhật: kế hoạch server JCV → "Trao đổi với Royke và theo dõi trước khi có kế hoạch tiếp".</span>
+        </div>
+        <div class="change-item">
+          <span class="name">Chuẩn hóa Network Diagram hệ thống</span>
+          <span class="change-note">Mốc tiếp theo cập nhật: "Review & chuẩn hóa Q3" → "Chuẩn hóa các farm chưa đạt yêu cầu".</span>
+        </div>
+        <div class="change-item">
+          <span class="name">AI Whitelist Management</span>
+          <span class="change-note">Trạng thái đổi thành "Triển khai từ tuần tới"; rủi ro cập nhật: "Indo chưa có policy, chỉ aware".</span>
+        </div>
+        <div class="change-item">
+          <span class="name">Cập nhật Security Policy</span>
+          <span class="change-note">Mốc tiếp theo cập nhật: SOP sau audit 26/09 → "Kết hợp SOP nhà máy và họp thảo luận các update 12/08".</span>
+        </div>
+        <div class="change-item">
+          <span class="name">IT Asset Audit</span>
+          <span class="change-note">Trạng thái đổi từ "Đã thực hiện" → "Theo dõi định kỳ"; mốc tiếp theo: "Tiếp tục theo dõi".</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="change-section">
+      <h3>Không đổi (5 hạng mục)</h3>
+      <div class="unchanged-list">
+        <b>Giám sát thiết bị lạ (FortiGate/FAZ)</b> · <b>Rà soát Sophos Agent (IT Shadow)</b> · <b>Chuẩn hóa Network Diagram (JKT)</b> · <b>Kiểm soát chia sẻ dữ liệu</b> · <b>Quy trình mở Port / kết nối</b>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-details">
+  <div class="stats">
+    <div class="stat-card total"><div class="num">18</div><div class="lbl">Tổng hạng mục</div></div>
+    <div class="stat-card done"><div class="num">11</div><div class="lbl">Đã hoàn thành / ổn định</div></div>
+    <div class="stat-card progress"><div class="num">6</div><div class="lbl">Đang triển khai</div></div>
+    <div class="stat-card blocked"><div class="num">1</div><div class="lbl">Vướng mắc / chưa bắt đầu</div></div>
+  </div>
+
+  <div class="toolbar">
+    <input type="search" id="search" placeholder="Tìm theo nội dung, owner, ghi chú…">
+    <select id="filterStatus">
+      <option value="">Tất cả trạng thái</option>
+      <option value="done">Đã hoàn thành / ổn định</option>
+      <option value="progress">Đang triển khai</option>
+      <option value="blocked">Vướng mắc / chưa bắt đầu</option>
+    </select>
+    <select id="filterOwner">
+      <option value="">Tất cả owner</option>
+      <option value="SnC">SnC</option>
+      <option value="DigiS">DigiS</option>
+    </select>
+    <span class="count" id="resultCount"></span>
+  </div>
+
+  <div id="groups"></div>
+  </div>
+
+</div>
+
+<footer>IT Security &amp; Governance Tracker · SnC × DigiS</footer>
+
+<script>
+  document.querySelectorAll('.tabs button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('page-' + btn.dataset.page).classList.add('active');
+    });
+  });
+</script>
+
+<script>
+const DATA = [
+  { group: "App control", items: [
+    { content: "Giám sát thiết bị lạ (FortiGate/FAZ)", status: "Theo dõi định kỳ", kind: "done", owner: "SnC", support: "DigiS", risk: "—", next: "Tiếp tục theo dõi 07/07" },
+    { content: "Rà soát Sophos Agent (IT Shadow)", status: "Đã thực hiện", kind: "done", owner: "SnC", support: "DigiS", risk: "—", next: "Tiếp tục theo dõi 25/07" },
+    { content: "Kiểm soát phần mềm crack", status: "Theo dõi định kỳ", kind: "done", owner: "SnC", support: "DigiS", risk: "Endpoint phân tán, dự án ngành chưa tham vấn Digi", next: "Tiếp tục theo dõi" },
+    { content: "Thu hồi quyền Admin end user", status: "Theo dõi định kỳ", kind: "done", owner: "SnC", support: "DigiS", risk: "Endpoint phân tán", next: "Tiếp tục theo dõi" },
+  ]},
+  { group: "Network monitoring", items: [
+    { content: "Kiểm soát S2S, export log S3 & AI analysis", status: "Theo dõi định kỳ", kind: "done", owner: "SnC", support: "DigiS", risk: "Farm nhiều, dữ liệu cần update · cần DigiS Infras", next: "Tiếp tục theo dõi" },
+    { content: "BYOD & VLAN Guest", status: "Chưa đạt yêu cầu", kind: "blocked", owner: "SnC", support: "DigiS", risk: "Công nghệ hiện có không hỗ trợ · cần định hướng Head of Digi", next: "Tạm dừng từ 31/07" },
+    { content: "FAZ Bandwidth Monitoring", status: "Theo dõi định kỳ", kind: "done", owner: "SnC", support: "DigiS", risk: "—", next: "Tiếp tục theo dõi" },
+    { content: "Quản lý Outbound OT", status: "Đã họp trao đổi", kind: "progress", owner: "SnC", support: "DigiS", risk: "Cần DigiS Infras", next: "Tiếp tục thảo luận đến Q3" },
+    { content: "Giải pháp FortiGate Farm & FAZ tập trung", status: "Đã họp vendor lần 1 (06/08)", kind: "progress", owner: "DigiS", support: "SnC", risk: "—", next: "Tiếp tục làm việc với vendor" },
+  ]},
+  { group: "Endpoint management", items: [
+    { content: "Windows License Audit", status: "Theo dõi định kỳ", kind: "done", owner: "DigiS", support: "SnC", risk: "Endpoint phân tán, dự án không tham vấn Digi+", next: "Tiếp tục theo dõi từ 31/07" },
+    { content: "Đánh giá thay thế Desktop Central", status: "Đã làm việc vendor", kind: "progress", owner: "DigiS", support: "SnC", risk: "—", next: "Trao đổi với Royke và theo dõi trước khi có kế hoạch tiếp" },
+  ]},
+  { group: "Network diagram / IT & OT", items: [
+    { content: "Chuẩn hóa Network Diagram (JKT)", status: "Đã họp thống nhất", kind: "done", owner: "DigiS", support: "SnC", risk: "Chờ BP final bàn triển khai tiếp", next: "Chốt theo BP & triển khai 31/07" },
+    { content: "Chuẩn hóa Network Diagram hệ thống", status: "Đã họp thống nhất", kind: "done", owner: "DigiS", support: "SnC", risk: "Nhiều farm quy mô nhỏ, feed HC chưa trunking wifi · cần DigiS Infras", next: "Chuẩn hóa các farm chưa đạt yêu cầu" },
+  ]},
+  { group: "Data protect", items: [
+    { content: "Kiểm soát chia sẻ dữ liệu", status: "Đã aware cho Swine", kind: "progress", owner: "SnC", support: "—", risk: "Cần hợp tác từ business · cần DigiS", next: "Đưa vào policy revise Q3" },
+    { content: "AI Whitelist Management", status: "Triển khai từ tuần tới", kind: "progress", owner: "SnC", support: "—", risk: "Indo chưa có policy, chỉ aware", next: "Thảo luận thống nhất Q3" },
+  ]},
+  { group: "Governance & policy", items: [
+    { content: "Quy trình mở Port / kết nối", status: "Đã email thông báo", kind: "done", owner: "DigiS", support: "SnC", risk: "—", next: "Cơ bản hoàn tất · SOP hướng dẫn bổ sung thêm" },
+    { content: "Cập nhật Security Policy", status: "Processing", kind: "progress", owner: "DigiS", support: "SnC", risk: "—", next: "Kết hợp SOP nhà máy và họp thảo luận các update 12/08" },
+    { content: "IT Asset Audit", status: "Theo dõi định kỳ", kind: "done", owner: "DigiS", support: "—", risk: "Bedrock token đã hỗ trợ", next: "Tiếp tục theo dõi" },
+  ]},
+];
+
+const groupsEl = document.getElementById('groups');
+const searchEl = document.getElementById('search');
+const statusEl = document.getElementById('filterStatus');
+const ownerEl = document.getElementById('filterOwner');
+const countEl = document.getElementById('resultCount');
+
+function kindLabel(kind){
+  if(kind==='done') return 'done';
+  if(kind==='progress') return 'progress';
+  return 'blocked';
+}
+
+function render(){
+  const q = searchEl.value.trim().toLowerCase();
+  const st = statusEl.value;
+  const ow = ownerEl.value;
+  groupsEl.innerHTML = '';
+  let total = 0;
+
+  DATA.forEach((g, gi) => {
+    const filtered = g.items.filter(it => {
+      if(st && it.kind !== st) return false;
+      if(ow && it.owner !== ow && it.support !== ow) return false;
+      if(q){
+        const hay = (it.content+' '+it.status+' '+it.owner+' '+it.support+' '+it.risk+' '+it.next).toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    if(filtered.length === 0) return;
+    total += filtered.length;
+
+    const doneCt = filtered.filter(i=>i.kind==='done').length;
+    const progCt = filtered.filter(i=>i.kind==='progress').length;
+    const blkCt = filtered.filter(i=>i.kind==='blocked').length;
+    const subParts = [];
+    if(doneCt) subParts.push(doneCt+' hoàn thành');
+    if(progCt) subParts.push(progCt+' triển khai');
+    if(blkCt) subParts.push(blkCt+' vướng mắc');
+
+    const wrap = document.createElement('div');
+    wrap.className = 'group';
+    wrap.innerHTML = `
+      <div class="group-head" data-idx="${gi}">
+        <div><span class="group-title">${g.group}</span><span class="group-sub">${subParts.join(' · ')}</span></div>
+        <span class="chev">&#9662;</span>
+      </div>
+      <div class="items">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:26%">Nội dung</th>
+              <th style="width:14%">Trạng thái</th>
+              <th style="width:14%">Owner → Support</th>
+              <th style="width:24%">Rủi ro / cần hỗ trợ</th>
+              <th style="width:22%">Mốc tiếp theo</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${filtered.map(it => `
+              <tr>
+                <td class="content-cell" data-label="Nội dung">${it.content}</td>
+                <td data-label="Trạng thái"><span class="badge ${kindLabel(it.kind)}">${it.status}</span></td>
+                <td class="owner" data-label="Owner → Support">${it.owner} ${it.support!=='—' ? '&rarr; '+it.support : ''}</td>
+                <td class="risk" data-label="Rủi ro / cần hỗ trợ">${it.risk}</td>
+                <td class="next" data-label="Mốc tiếp theo">${it.next}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+    groupsEl.appendChild(wrap);
+  });
+
+  if(total === 0){
+    groupsEl.innerHTML = '<div class="empty">Không tìm thấy hạng mục phù hợp.</div>';
+  }
+  countEl.textContent = total + ' / 18 hạng mục';
+
+  document.querySelectorAll('.group-head').forEach(h => {
+    h.addEventListener('click', () => {
+      h.parentElement.classList.toggle('collapsed');
+    });
+  });
+}
+
+searchEl.addEventListener('input', render);
+statusEl.addEventListener('change', render);
+ownerEl.addEventListener('change', render);
+
+render();
+</script>
+</body>
+</html>
